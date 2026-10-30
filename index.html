@@ -1,271 +1,364 @@
+```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HAPPY BUSDAY | Seat Planner</title>
+<title>HAPPY BUSDAY 1+2=3 | Seat Map</title>
+
 <style>
 :root {
-  --blue:#c9eaff;
-  --dark:#2876a8;
-  --bg:#f2f9ff;
-  --pink:#fff0f6;
+  --blue:#c7e9ff;
+  --deep:#2777a8;
+  --pink:#fff0f7;
+  --ink:#29465b;
 }
 * { box-sizing:border-box; }
 body {
   margin:0;
   font-family:Arial,Tahoma,sans-serif;
-  background:linear-gradient(135deg,#eff9ff,#fff3f8);
-  color:#23445b;
+  background:linear-gradient(135deg,#eef9ff,#fff3f8);
+  color:var(--ink);
 }
-header { text-align:center;padding:28px 12px 18px; }
-header h1 { margin:0;color:#2876a8;font-size:clamp(24px,5vw,38px); }
-header p { color:#648399; }
-main { max-width:1100px;margin:auto;padding:12px; }
+header { text-align:center;padding:25px 12px 15px; }
+header h1 { color:var(--deep);font-size:clamp(23px,5vw,38px);margin:0; }
+header p { color:#67859a;font-size:14px; }
+main { max-width:1050px;margin:auto;padding:12px; }
 .card {
-  background:white;border:1px solid #d8ecf8;border-radius:20px;
-  padding:18px;margin-bottom:16px;
-  box-shadow:0 8px 24px #7da9c51c;
+  background:white;border:1px solid #d9edf9;border-radius:18px;
+  padding:16px;margin-bottom:16px;box-shadow:0 5px 20px #719ab21c;
 }
-h2 { font-size:20px;margin-top:0; }
-label { font-weight:bold; }
-select,button {
-  font:inherit;border:1px solid #b8dcef;border-radius:10px;
-  padding:10px;background:#edf8ff;color:#245d7b;cursor:pointer;
+h2 { font-size:19px;margin-top:0; }
+button,select {
+  border:1px solid #b9dcee;border-radius:11px;
+  padding:10px 12px;background:#eff9ff;color:#285873;
+  font-size:14px;cursor:pointer;
 }
-select { max-width:100%; }
-button:hover { background:#d8efff; }
-button:focus-visible,select:focus-visible {
-  outline:3px solid #2876a8;outline-offset:2px;
+button:active { transform:scale(.98); }
+button.primary { background:#cdeaff;border-color:#8dc8eb; }
+button.danger { background:#fff0f4;border-color:#f1cad8; }
+.toolbar { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px; }
+#stage {
+  width:100%;height:65vh;min-height:320px;max-height:700px;
+  overflow:hidden;position:relative;background:#f5faff;
+  border:1px solid #e0edf6;border-radius:12px;
+  touch-action:none;display:flex;align-items:center;justify-content:center;
 }
-.controls { display:flex;gap:8px;flex-wrap:wrap;align-items:center; }
-#seatMap {
-  margin-top:16px;overflow:auto;padding:12px 4px;
-  border:1px solid #e1edf5;border-radius:14px;
-  background:#fbfdff;
+#canvas {
+  position:absolute;left:0;top:0;transform-origin:top left;
+  user-select:none;
 }
-.stage {
-  text-align:center;background:#666;color:white;font-weight:bold;
-  letter-spacing:3px;padding:12px;border-radius:8px;
-  margin:0 auto 20px;max-width:500px;
+#map { display:block;width:100%;height:100%;pointer-events:none; }
+#overlay {
+  position:absolute;inset:0;width:100%;height:100%;
+  overflow:visible;cursor:crosshair;
 }
-.row {
-  display:flex;align-items:center;gap:5px;margin:7px auto;
-  width:max-content;max-width:100%;
+.pin { fill:#ff5f9d;stroke:white;stroke-width:2;cursor:pointer; }
+.pin.selected { fill:#28a6e8; }
+.pin text {
+  fill:white;font-size:12px;font-weight:bold;
+  text-anchor:middle;dominant-baseline:central;pointer-events:none;
 }
-.rowLabel { width:45px;text-align:right;font-size:12px;color:#668399; }
-.seats { display:flex;gap:4px; }
-.seat {
-  width:27px;height:27px;min-width:27px;padding:0;
-  border-radius:7px;border:1px solid #9bc9e5;
-  background:#e3f4ff;color:#245d7b;font-size:10px;
-}
-.seat.selected {
-  background:#2876a8;color:white;border-color:#16577f;
-  box-shadow:0 0 0 2px #b9e5ff;
-}
-.seat:disabled { opacity:.4;cursor:not-allowed; }
-.legend { display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:14px; }
-.dot { display:inline-block;width:13px;height:13px;border-radius:4px;vertical-align:middle;margin-right:4px; }
-.available { background:#e3f4ff;border:1px solid #9bc9e5; }
-.chosen { background:#2876a8; }
+.hint { font-size:13px;color:#68869b;line-height:1.6;margin-top:10px; }
+label { font-size:14px;font-weight:bold;display:block;margin-bottom:7px; }
+select { width:100%;max-width:300px;margin-bottom:12px; }
+#info { background:#f0f9ff;padding:13px;border-radius:12px;line-height:1.7; }
+#info strong { color:var(--deep); }
 #summary { line-height:1.8;overflow-wrap:anywhere; }
-#total { color:#2876a8;font-size:25px;font-weight:bold; }
-#selectedList { font-size:14px; }
-.small { font-size:12px;color:#71899a;line-height:1.6; }
-#poster { width:100%;height:auto;border-radius:12px; }
-@media(max-width:600px) {
-  main { padding:8px; }
-  .card { padding:13px; }
-  .seat { width:24px;height:25px;min-width:24px;font-size:9px; }
-  .seats { gap:3px; }
-  .row { gap:4px; }
-  .rowLabel { width:34px;font-size:11px; }
-}
+#seatlist { display:flex;flex-wrap:wrap;gap:7px;margin-top:10px; }
+.seat-tag { padding:7px 9px;background:#e4f5ff;border-radius:9px;font-size:13px; }
+.price-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:7px; }
+.price-btn { padding:9px 5px; }
+.price-btn.active { background:#c9eaff;border:2px solid #3188b8; }
+#poster { width:100%;height:auto;border-radius:10px; }
+footer { text-align:center;color:#6c879a;font-size:12px;padding:15px; }
 </style>
 </head>
-<body>
 
+<body>
 <header>
   <h1>🩵 HAPPY BUSDAY 1+2=3 🎂</h1>
-  <p>INTERACTIVE SEAT PLANNER · 5–6 DECEMBER 2026</p>
+  <p>INTERACTIVE SEAT MAP · 5–6 DECEMBER 2026</p>
 </header>
 
 <main>
-  <section class="card">
-    <h2>🎟️ เลือกโซนที่ต้องการ</h2>
-    <div class="controls">
-      <label for="zoneSelect">โซน:</label>
-      <select id="zoneSelect"></select>
-      <button id="clearZone">ล้างที่เลือกในโซนนี้</button>
-      <button id="clearAll">ล้างทั้งหมด</button>
-    </div>
-    <div id="zoneInfo" style="margin-top:14px"></div>
-    <div id="seatMap">
-      <div class="stage">STAGE</div>
-      <div id="rows"></div>
-    </div>
-    <div class="legend">
-      <span><i class="dot available"></i>ยังไม่ได้เลือก</span>
-      <span><i class="dot chosen"></i>เลือกแล้ว</span>
-    </div>
-    <p class="small">
-      ผังจำลองเพื่อช่วยวางแผนเท่านั้น จำนวนแถวและที่นั่งไม่ได้ยืนยันตามผังทางการ
-      สีที่นั่งแสดงเฉพาะการเลือกในเว็บไซต์นี้ ไม่ใช่สถานะที่นั่งว่างจริง
-    </p>
-  </section>
+<section class="card">
+  <h2>🪑 แผนผังที่นั่ง</h2>
 
-  <section class="card">
-    <h2>🧾 สรุปที่นั่งที่เลือก</h2>
-    <div id="summary">ยังไม่ได้เลือกที่นั่ง</div>
-    <div id="selectedList"></div>
-    <hr style="border:0;border-top:1px solid #e0edf5">
-    <div>ราคารวมโดยประมาณ</div>
-    <div id="total">0 บาท</div>
-    <p class="small">ยังไม่รวมค่าธรรมเนียมและค่าใช้จ่ายอื่น ๆ</p>
-  </section>
+  <label for="zone">1. เลือกโซนก่อนปักหมุด</label>
+  <select id="zone"></select>
 
-  <section class="card">
-    <h2>🖼️ โปสเตอร์อ้างอิง</h2>
-    <img id="poster" src="poster.jpg" alt="โปสเตอร์ HAPPY BUSDAY 1+2=3">
-  </section>
+  <div class="toolbar">
+    <button onclick="zoom(1.25)">＋ ซูมเข้า</button>
+    <button onclick="zoom(0.8)">－ ซูมออก</button>
+    <button onclick="resetView()">รีเซ็ตภาพ</button>
+    <button class="danger" onclick="clearPins()">ล้างหมุดทั้งหมด</button>
+  </div>
+
+  <div id="stage">
+    <div id="canvas">
+      <img id="map" src="seatmap.jpg" alt="แผนผังที่นั่งจริง">
+      <svg id="overlay"></svg>
+    </div>
+  </div>
+
+  <div class="hint">
+    2. คลิกหรือแตะตำแหน่งที่นั่งบนภาพเพื่อปักหมุด<br>
+    • ลากภาพเพื่อเลื่อนดู และใช้ปุ่มซูมเพื่อดูจุดที่นั่งให้ชัดขึ้น<br>
+    • แตะหมุดเดิมเพื่อยกเลิกที่นั่งที่เลือก<br>
+    • หมุดสีชมพู = เลือกแล้วในครั้งแรก / สีฟ้า = หมุดที่เลือกอยู่
+  </div>
+</section>
+
+<section class="card">
+  <h2>🎟️ เลือกโซนและราคา</h2>
+  <div id="priceGrid" class="price-grid"></div>
+  <p class="hint">ราคาตามโปสเตอร์อ้างอิง ยังไม่รวมค่าธรรมเนียมที่อาจมีเพิ่มเติม</p>
+</section>
+
+<section class="card">
+  <h2>💙 ที่นั่งที่เลือก</h2>
+  <div id="summary">ยังไม่ได้เลือกที่นั่ง</div>
+  <div id="seatlist"></div>
+  <hr style="border:0;border-top:1px solid #e0edf5;margin:14px 0">
+  <div id="total"><strong>ราคารวม: 0 บาท</strong></div>
+  <button class="primary" onclick="copySummary()" style="margin-top:12px">
+    คัดลอกรายการที่เลือก
+  </button>
+</section>
+
+<section class="card">
+  <h2>🖼️ โปสเตอร์อ้างอิง</h2>
+  <img id="poster" src="poster.jpg" alt="โปสเตอร์ราคาบัตร">
+</section>
+
+<footer>
+  Fan-made seat map · ไม่ใช่ระบบจองบัตรทางการ<br>
+  หมุดเป็นตำแหน่งอ้างอิงที่ผู้ใช้ปักเอง ไม่ได้ยืนยันหมายเลขที่นั่งหรือสถานะที่นั่งว่าง
+</footer>
 </main>
 
 <script>
-const prices = {
-  A1:6500,A2:6500,
-  B1:6000,B2:6000,B3:6000,B4:6000,
-  C1:5500,C2:5500,C3:5500,C4:5500,
-  D1:5000,D2:5000,D3:5000,D4:5000,
-  E1:4500,E2:4500,E3:4500,E4:4500,
-  F1:4000,F2:4000,F3:4000,F4:4000,
-  G1:3500,G2:3500,H1:3000,H2:3000,
-  I1:2500,I2:2500,I3:2500,I4:2500,I5:2500,
-  J1:2000,J2:2000,J3:2000,J4:2000,J5:2000,
-  K1:1500,K2:1500,K3:1500,K4:1500,K5:1500
+const zones = [
+  ["A1",6500],["A2",6500],
+  ["B1",6000],["B2",6000],["B3",6000],["B4",6000],
+  ["C1",5500],["C2",5500],["C3",5500],["C4",5500],
+  ["D1",5000],["D2",5000],["D3",5000],["D4",5000],
+  ["E1",4500],["E2",4500],["E3",4500],["E4",4500],
+  ["F1",4000],["F2",4000],["F3",4000],["F4",4000],
+  ["G1",3500],["G2",3500],
+  ["H1",3000],["H2",3000],
+  ["I1",2500],["I2",2500],["I3",2500],["I4",2500],["I5",2500],
+  ["J1",2000],["J2",2000],["J3",2000],["J4",2000],["J5",2000],
+  ["K1",1500],["K2",1500],["K3",1500],["K4",1500],["K5",1500]
+];
+
+const stage = document.getElementById("stage");
+const canvas = document.getElementById("canvas");
+const map = document.getElementById("map");
+const svg = document.getElementById("overlay");
+const zoneSelect = document.getElementById("zone");
+let currentZone = "A1";
+let pins = [];
+let scale = 1, tx = 0, ty = 0;
+let baseW = 0, baseH = 0;
+let drag = null;
+let moved = false;
+let nextId = 1;
+
+zones.forEach(([name,price]) => {
+  const opt = document.createElement("option");
+  opt.value = name;
+  opt.textContent = `${name} — ${price.toLocaleString()} บาท`;
+  zoneSelect.appendChild(opt);
+});
+zoneSelect.addEventListener("change", () => currentZone = zoneSelect.value);
+
+const priceGrid = document.getElementById("priceGrid");
+zones.forEach(([name,price]) => {
+  const b = document.createElement("button");
+  b.className = "price-btn";
+  b.textContent = `${name}\n${price.toLocaleString()} ฿`;
+  b.style.whiteSpace = "pre-line";
+  b.onclick = () => {
+    currentZone = name;
+    zoneSelect.value = name;
+    updateZoneButtons();
+  };
+  b.dataset.zone = name;
+  priceGrid.appendChild(b);
+});
+function updateZoneButtons() {
+  document.querySelectorAll(".price-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.zone === currentZone);
+  });
+}
+updateZoneButtons();
+
+function setupImage() {
+  if (!map.naturalWidth || !map.naturalHeight) return;
+  const maxW = stage.clientWidth;
+  const maxH = stage.clientHeight;
+  const ratio = Math.min(maxW / map.naturalWidth, maxH / map.naturalHeight);
+  baseW = map.naturalWidth * ratio;
+  baseH = map.naturalHeight * ratio;
+  canvas.style.width = baseW + "px";
+  canvas.style.height = baseH + "px";
+  map.style.width = baseW + "px";
+  map.style.height = baseH + "px";
+  svg.setAttribute("viewBox", `0 0 ${baseW} ${baseH}`);
+  svg.setAttribute("width", baseW);
+  svg.setAttribute("height", baseH);
+  resetView();
+  renderPins();
+}
+map.onload = setupImage;
+window.addEventListener("resize", () => {
+  if (map.complete) setupImage();
+});
+map.onerror = () => {
+  document.getElementById("info")?.remove();
+  stage.innerHTML = "ไม่พบไฟล์ seatmap.jpg — ตรวจสอบชื่อไฟล์ใน GitHub";
 };
 
-/* จำนวนแถวและที่นั่งด้านล่างเป็นข้อมูลจำลอง
-   เพื่อให้ทดลองคลิกเลือกที่นั่งได้ ไม่ใช่จำนวนจริงจากผู้จัด */
-const layout = {
-  A1:{rows:10,seats:12}, A2:{rows:10,seats:12},
-  B1:{rows:10,seats:18}, B2:{rows:8,seats:20},
-  B3:{rows:8,seats:20}, B4:{rows:10,seats:18},
-  C1:{rows:5,seats:16}, C2:{rows:5,seats:18},
-  C3:{rows:5,seats:18}, C4:{rows:5,seats:16},
-  D1:{rows:6,seats:18}, D2:{rows:4,seats:18},
-  D3:{rows:4,seats:18}, D4:{rows:6,seats:18},
-  E1:{rows:7,seats:18}, E2:{rows:4,seats:18},
-  E3:{rows:4,seats:18}, E4:{rows:7,seats:18},
-  F1:{rows:2,seats:18}, F2:{rows:3,seats:18},
-  F3:{rows:3,seats:18}, F4:{rows:2,seats:18},
-  G1:{rows:3,seats:18}, G2:{rows:3,seats:18},
-  H1:{rows:4,seats:18}, H2:{rows:4,seats:18},
-  I1:{rows:3,seats:20}, I2:{rows:3,seats:20},
-  I3:{rows:3,seats:20}, I4:{rows:3,seats:20}, I5:{rows:3,seats:20},
-  J1:{rows:3,seats:20}, J2:{rows:3,seats:20},
-  J3:{rows:3,seats:20}, J4:{rows:3,seats:20}, J5:{rows:3,seats:20},
-  K1:{rows:2,seats:20}, K2:{rows:2,seats:20},
-  K3:{rows:2,seats:20}, K4:{rows:2,seats:20}, K5:{rows:2,seats:20}
-};
+function applyTransform() {
+  canvas.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+}
+function zoom(factor) {
+  const old = scale;
+  scale = Math.max(1, Math.min(6, scale * factor));
+  const r = stage.getBoundingClientRect();
+  const cx = r.width / 2, cy = r.height / 2;
+  tx = cx - (cx - tx) * (scale / old);
+  ty = cy - (cy - ty) * (scale / old);
+  applyTransform();
+}
+function resetView() {
+  scale = 1;
+  tx = (stage.clientWidth - baseW) / 2;
+  ty = (stage.clientHeight - baseH) / 2;
+  applyTransform();
+}
+function renderPins() {
+  svg.innerHTML = "";
+  pins.forEach(p => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("transform", `translate(${p.x * baseW},${p.y * baseH})`);
+    g.style.cursor = "pointer";
 
-const selected = new Map();
-const zoneSelect = document.getElementById("zoneSelect");
-const rowsEl = document.getElementById("rows");
-const zoneInfo = document.getElementById("zoneInfo");
+    const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("r", Math.max(8, 10 / scale));
+    c.setAttribute("class", "pin" + (p.selected ? " selected" : ""));
+    g.appendChild(c);
 
-Object.keys(prices).forEach(zone => {
-  const option = document.createElement("option");
-  option.value = zone;
-  option.textContent = `${zone} · ${prices[zone].toLocaleString("th-TH")} บาท`;
-  zoneSelect.appendChild(option);
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("y", "0.5");
+    t.textContent = p.id;
+    t.style.fontSize = Math.max(8, 10 / scale) + "px";
+    g.appendChild(t);
+
+    g.addEventListener("pointerdown", e => e.stopPropagation());
+    g.addEventListener("click", e => {
+      e.stopPropagation();
+      p.selected = !p.selected;
+      renderPins();
+      updateSummary();
+    });
+    svg.appendChild(g);
+  });
+}
+
+stage.addEventListener("pointerdown", e => {
+  if (e.target.closest && e.target.closest("g")) return;
+  drag = { x:e.clientX, y:e.clientY, tx, ty, startX:e.clientX, startY:e.clientY };
+  moved = false;
+  stage.setPointerCapture(e.pointerId);
+});
+stage.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (Math.abs(e.clientX-drag.startX) + Math.abs(e.clientY-drag.startY) > 5) moved = true;
+  if (moved) {
+    tx = drag.tx + dx;
+    ty = drag.ty + dy;
+    applyTransform();
+  }
+});
+stage.addEventListener("pointerup", e => {
+  if (!drag) return;
+  const wasMoved = moved;
+  drag = null;
+  if (wasMoved) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const px = (e.clientX - rect.left) / scale;
+  const py = (e.clientY - rect.top) / scale;
+  if (px < 0 || py < 0 || px > baseW || py > baseH) return;
+
+  const x = px / baseW, y = py / baseH;
+  const nearby = pins.find(p => Math.hypot((p.x-x)*baseW,(p.y-y)*baseH) < 16/scale);
+  if (nearby) {
+    nearby.selected = !nearby.selected;
+  } else {
+    pins.push({
+      id: nextId++,
+      zone: currentZone,
+      x, y,
+      selected: true
+    });
+  }
+  renderPins();
+  updateSummary();
 });
 
-function renderZone() {
-  const zone = zoneSelect.value;
-  const cfg = layout[zone];
-  zoneInfo.innerHTML =
-    `<strong>โซน ${zone}</strong> · ${prices[zone].toLocaleString("th-TH")} บาท/ที่นั่ง` +
-    `<br><span class="small">แถวและจำนวนที่นั่งเป็นข้อมูลจำลอง</span>`;
-  rowsEl.replaceChildren();
+function updateSummary() {
+  const selected = pins.filter(p => p.selected);
+  const sum = selected.reduce((a,p) => {
+    const z = zones.find(z => z[0] === p.zone);
+    return a + (z ? z[1] : 0);
+  },0);
 
-  for (let r = 1; r <= cfg.rows; r++) {
-    const row = document.createElement("div");
-    row.className = "row";
-
-    const label = document.createElement("div");
-    label.className = "rowLabel";
-    label.textContent = "แถว " + r;
-    row.appendChild(label);
-
-    const seats = document.createElement("div");
-    seats.className = "seats";
-
-    for (let s = 1; s <= cfg.seats; s++) {
-      const id = `${zone}-R${r}-S${s}`;
-      const btn = document.createElement("button");
-      btn.className = "seat" + (selected.has(id) ? " selected" : "");
-      btn.textContent = s;
-      btn.title = `โซน ${zone} แถว ${r} ที่นั่ง ${s}`;
-      btn.setAttribute("aria-label", btn.title);
-      btn.setAttribute("aria-pressed", selected.has(id) ? "true" : "false");
-
-      btn.onclick = () => {
-        if (selected.has(id)) selected.delete(id);
-        else selected.set(id, {zone, row:r, seat:s, price:prices[zone]});
-        renderZone();
-        renderSummary();
-      };
-      seats.appendChild(btn);
-    }
-    row.appendChild(seats);
-    rowsEl.appendChild(row);
-  }
-}
-
-function renderSummary() {
-  const all = Array.from(selected.values());
   document.getElementById("summary").textContent =
-    all.length ? `เลือกแล้ว ${all.length} ที่นั่ง` : "ยังไม่ได้เลือกที่นั่ง";
+    selected.length ? `เลือกแล้ว ${selected.length} จุด` : "ยังไม่ได้เลือกที่นั่ง";
 
-  const list = document.getElementById("selectedList");
-  list.replaceChildren();
-
-  all.forEach(item => {
-    const line = document.createElement("div");
-    line.textContent =
-      `โซน ${item.zone} · แถว ${item.row} · ที่นั่ง ${item.seat} — ${item.price.toLocaleString("th-TH")} บาท`;
-    list.appendChild(line);
+  const list = document.getElementById("seatlist");
+  list.innerHTML = "";
+  selected.forEach(p => {
+    const z = zones.find(z => z[0] === p.zone);
+    const tag = document.createElement("span");
+    tag.className = "seat-tag";
+    tag.textContent = `จุด ${p.id} · โซน ${p.zone} · ${z[1].toLocaleString()} บาท`;
+    list.appendChild(tag);
   });
-
-  const total = all.reduce((sum, item) => sum + item.price, 0);
-  document.getElementById("total").textContent =
-    total.toLocaleString("th-TH") + " บาท";
+  document.getElementById("total").innerHTML =
+    `<strong>ราคารวม: ${sum.toLocaleString()} บาท</strong>`;
 }
-
-zoneSelect.addEventListener("change", renderZone);
-
-document.getElementById("clearZone").onclick = () => {
-  const zone = zoneSelect.value;
-  for (const [id, item] of selected) {
-    if (item.zone === zone) selected.delete(id);
+function clearPins() {
+  if (!confirm("ต้องการล้างหมุดทั้งหมดใช่ไหม?")) return;
+  pins = [];
+  nextId = 1;
+  renderPins();
+  updateSummary();
+}
+function copySummary() {
+  const selected = pins.filter(p => p.selected);
+  if (!selected.length) {
+    alert("ยังไม่ได้เลือกที่นั่งค่ะ");
+    return;
   }
-  renderZone();
-  renderSummary();
-};
-
-document.getElementById("clearAll").onclick = () => {
-  selected.clear();
-  renderZone();
-  renderSummary();
-};
-
-document.getElementById("poster").onerror = function() {
-  this.alt = "ไม่พบ poster.jpg — ตรวจสอบชื่อไฟล์ใน Repository";
-};
-
-renderZone();
-renderSummary();
+  const lines = selected.map(p => {
+    const z = zones.find(z => z[0] === p.zone);
+    return `จุด ${p.id} · โซน ${p.zone} · ${z[1].toLocaleString()} บาท`;
+  });
+  const total = selected.reduce((a,p) =>
+    a + zones.find(z => z[0] === p.zone)[1],0);
+  const text = lines.join("\n") + `\nราคารวม ${total.toLocaleString()} บาท`;
+  navigator.clipboard.writeText(text).then(
+    () => alert("คัดลอกรายการแล้วค่ะ"),
+    () => prompt("คัดลอกข้อความนี้:",text)
+  );
+}
 </script>
 </body>
 </html>
+```
